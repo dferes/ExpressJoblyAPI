@@ -20,7 +20,7 @@ describe('works: sqlForPartialUpdate', () => {
   test('throws BadRequestError when the dataTpUpdate object is empty', () => {
     expect.assertions(1);
     try {
-      const sqlResponse = sqlForPartialUpdate(
+      sqlForPartialUpdate(
         {},
         {
           firstName: "first_name",
