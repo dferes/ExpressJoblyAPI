@@ -50,7 +50,6 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: none
  */
 router.get("/", async function (req, res, next) {
-  console.log(req.body);
   try {
     const validator = jsonschema.validate(req.body, companySearchFilter);
     if (!validator.valid) {
