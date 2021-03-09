@@ -45,8 +45,19 @@ class Company {
     return company;
   }
 
-  /** Find all companies.
+  /** Find all companies constricted to the possible filters:
+   *   . name          any company with name similar to 'name'
+   *   . minEmployees: all companies with num_employees >= 'minEmployees'
+   *   . maxEmployees: all companies with num_employees <= 'maxEmployees'
    *
+   *  'data' can have the optional key/value pairs like: 
+   *     { 
+   *       name:         <stringVariable>, 
+   *       minEmployees: <intVariable>,
+   *       maxEmployees: <intVariable> 
+   *     }
+   * 
+   * If no filter variables are provided, then returns all companies in the database
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
   static async findAll(data) {
