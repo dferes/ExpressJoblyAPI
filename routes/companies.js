@@ -11,6 +11,7 @@ const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
+const companySearchFilter = require('../schemas/companySearchFilter.json');
 
 const router = new express.Router();
 
@@ -23,7 +24,6 @@ const router = new express.Router();
  *
  * Authorization required: login
  */
-
 router.post("/", ensureLoggedIn, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
@@ -49,10 +49,16 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  *
  * Authorization required: none
  */
-
 router.get("/", async function (req, res, next) {
+  console.log(req.body);
   try {
-    const companies = await Company.findAll();
+    const validator = jsonschema.validate(req.body, companySearchFilter);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
+    
+    const companies = await Company.findAll(req.body);
     return res.json({ companies });
   } catch (err) {
     return next(err);
@@ -66,7 +72,6 @@ router.get("/", async function (req, res, next) {
  *
  * Authorization required: none
  */
-
 router.get("/:handle", async function (req, res, next) {
   try {
     const company = await Company.get(req.params.handle);
