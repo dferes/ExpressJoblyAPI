@@ -1,5 +1,6 @@
 "use strict";
 
+const { search } = require("../app");
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
@@ -48,17 +49,35 @@ class Company {
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
+  static async findAll(data) {
+    const queryVerbs = { name: ' ILIKE ', minEmployees: ' >= ', maxEmployees: ' <= ' };
+    let filterValues = null;
+    
+    if (data.minEmployees > data.maxEmployees) {
+      throw new BadRequestError("Min employees cannot be greater than max");
+    }
+    let searchQuery = `SELECT handle,
+                        name,
+                        description,
+                        num_employees AS "numEmployees",
+                        logo_url AS "logoUrl"
+                      FROM companies`;
+    if (data.name) {
+      data.name = `%${data.name}%`;
+    }
+    
+    if ( Object.keys(data).length !== 0 ){
+      searchQuery +=  ' WHERE ' + Object.keys(data)
+        .map( (key, index) => `${key !== 'name'? 'num_employees': 'name'}${queryVerbs[key]}$${index+1}`)
+        .join(' AND ');
+      
+      filterValues = Object.values(data);
+    }                    
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
-    return companiesRes.rows;
+    searchQuery += ' ORDER BY name'
+
+    const companyResults = await db.query(searchQuery, filterValues);
+    return companyResults.rows;
   }
 
   /** Given a company handle, return data about company.
@@ -68,7 +87,6 @@ class Company {
    *
    * Throws NotFoundError if not found.
    **/
-
   static async get(handle) {
     const companyRes = await db.query(
           `SELECT handle,
@@ -98,7 +116,6 @@ class Company {
    *
    * Throws NotFoundError if not found.
    */
-
   static async update(handle, data) {
     const { setCols, values } = sqlForPartialUpdate(
         data,
@@ -128,7 +145,6 @@ class Company {
    *
    * Throws NotFoundError if company not found.
    **/
-
   static async remove(handle) {
     const result = await db.query(
           `DELETE
