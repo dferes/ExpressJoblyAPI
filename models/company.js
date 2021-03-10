@@ -60,7 +60,7 @@ class Company {
    * If no filter variables are provided, then returns all companies in the database
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
-  static async findAll(data) {
+  static async findAll(data={}) {
     const queryVerbs = { name: ' ILIKE ', minEmployees: ' >= ', maxEmployees: ' <= ' };
     let filterValues = null;
     
