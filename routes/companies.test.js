@@ -95,7 +95,77 @@ describe("GET /companies", function () {
           ],
     });
   });
+  test("returns the company with the handle of c1 when valid json 'name' data sent in the body ", async function () {
+    const resp = await request(app)
+      .get("/companies")
+      .send({ name: "1" });
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c1",
+          name: "C1",
+          description: "Desc1",
+          numEmployees: 1,
+          logoUrl: "http://c1.img",
+        }
+      ]
+    });
+  });
+  test("returns the company with the handle of c3 when valid json 'minEmployees' data is sent in the body ", async function () {
+    const resp = await request(app)
+      .get("/companies")
+      .send({ minEmployees: 3 });
 
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c3",
+          name: "C3",
+          description: "Desc3",
+          numEmployees: 3,
+          logoUrl: "http://c3.img",
+        }
+      ]
+    });
+  });
+  test("returns the company with the handle of c1 when valid json 'maxEmployees' data is sent in the body ", async function () {
+    const resp = await request(app)
+      .get("/companies")
+      .send({ maxEmployees: 1 });
+
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c1",
+          name: "C1",
+          description: "Desc1",
+          numEmployees: 1,
+          logoUrl: "http://c1.img",
+        }
+      ]
+    });
+  });
+  test("returns a 400 error when the key provided in the json body is not one of the three valid keys", async function () {
+    const resp = await request(app)
+      .get("/companies")
+      .send({ numberOfTemps: 3 });
+    expect(resp.status).toEqual(400);
+    expect(resp.body.error.message)
+      .toEqual(["instance additionalProperty \"numberOfTemps\" exists in instance when not allowed"]);
+  });
+  test("returns a 400 error when one of the keys provided in the json body is not one of the three valid keys", async function () {
+    const resp = await request(app)
+      .get("/companies")
+      .send({ 
+        hasCoffeeMachine: true,
+        name: 'C1',
+        minEmployees: 1,
+        maxEmployees: 3
+       });
+    expect(resp.status).toEqual(400);
+    expect(resp.body.error.message)
+      .toEqual(["instance additionalProperty \"hasCoffeeMachine\" exists in instance when not allowed"]);
+  });
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---
     // thus making it hard to test that the error-handler works with it. This
