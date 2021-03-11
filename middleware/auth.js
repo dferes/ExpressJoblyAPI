@@ -40,6 +40,12 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+/**
+ *  Middleware to use when the logged in user requires
+ *  admin privilages.
+ * 
+ * If not, raises Unauthorized.
+ */
 function verifyIsAdmin( req, res, next) {
   try {
     if (!res.locals.user.isAdmin) throw new UnauthorizedError();
@@ -49,8 +55,23 @@ function verifyIsAdmin( req, res, next) {
   }
 }
 
+
+function ensureAdminOrOwner( req, res, next ) {
+  try {
+    if (!res.locals.user.isAdmin) {
+      if( res.locals.user.username !== req.params.username) {
+        throw new UnauthorizedError();
+      }
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  verifyIsAdmin
+  verifyIsAdmin,
+  ensureAdminOrOwner
 };
