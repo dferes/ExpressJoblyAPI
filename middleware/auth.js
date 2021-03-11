@@ -55,7 +55,11 @@ function verifyIsAdmin( req, res, next) {
   }
 }
 
-
+/**
+ *  Middleware to use when the logged in user
+ *  requires either admin privileges or ownwership
+ *  of the account.
+ */
 function ensureAdminOrOwner( req, res, next ) {
   try {
     if (!res.locals.user.isAdmin) {
