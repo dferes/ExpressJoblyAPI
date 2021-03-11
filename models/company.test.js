@@ -141,6 +141,22 @@ describe("findAll", function () {
       }
     ]);
   });
+  test("works: maxEmployee, name and minEmployee filter, returns company with the handle c1 ", async function () {
+    let companies = await Company.findAll({ name: 'C1', minEmployees: 1, maxEmployees: 3});
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      }
+    ]);
+  });
+  test("works: name filter, returns an empty array when nothing in the database meets the search criteria ", async function () {
+    let companies = await Company.findAll({ name: 'B1'});
+    expect(companies).toEqual([]);
+  });
   test("fails: maxEmployee and minEmployee filter, returns BadRequestError ", async function () {
     expect.assertions(1);
     try{
