@@ -3,7 +3,7 @@
 const { search } = require("../app");
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-
+const { sqlForPartialUpdate } = require("../helpers/sql");
 
 class Job {
  
@@ -15,6 +15,15 @@ class Job {
   *
   * */
   static async create({ title, salary, equity, companyHandle }) {
+    const duplicateCheck = await db.query(
+        `SELECT title, company_handle
+         FROM jobs
+         WHERE title = $1 AND company_handle = $2`,
+       [title, companyHandle]);
+
+  if (duplicateCheck.rows[0])
+    throw new BadRequestError(`Duplicate job ${title} for company ${companyHandle}`);
+    
     const result = await db.query(
         `INSERT INTO jobs
          (title, salary, equity, company_handle)
@@ -24,54 +33,8 @@ class Job {
     );
     const job = result.rows[0];
 
-    return company;
+    return job;
   }  
-
-    /** Find all companies constricted to the possible filters:
-   *   . name          any company with name similar to 'name'
-   *   . minEmployees: all companies with num_employees >= 'minEmployees'
-   *   . maxEmployees: all companies with num_employees <= 'maxEmployees'
-   *
-   *  'data' can have the optional key/value pairs like: 
-   *     { 
-   *       name:         <stringVariable>, 
-   *       minEmployees: <intVariable>,
-   *       maxEmployees: <intVariable> 
-   *     }
-   * 
-   * If no filter variables are provided, then returns all companies in the database
-   * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
-   * */
-  static async findAll(data={}) {
-    const queryVerbs = { name: ' ILIKE ', minEmployees: ' >= ', maxEmployees: ' <= ' };
-    let filterValues = null;
-    
-    if (data.minEmployees > data.maxEmployees) {
-      throw new BadRequestError("Min employees cannot be greater than max");
-    }
-    let searchQuery = `SELECT handle,
-                        name,
-                        description,
-                        num_employees AS "numEmployees",
-                        logo_url AS "logoUrl"
-                      FROM jobs`;
-    if (data.name) {
-      data.name = `%${data.name}%`;
-    }
-    
-    if ( Object.keys(data).length !== 0 ){
-      searchQuery +=  ' WHERE ' + Object.keys(data)
-        .map( (key, index) => `${key !== 'name'? 'num_employees': 'name'}${queryVerbs[key]}$${index+1}`)
-        .join(' AND ');
-      
-      filterValues = Object.values(data);
-    }                    
-
-    searchQuery += ' ORDER BY name'
-
-    const companyResults = await db.query(searchQuery, filterValues);
-    return companyResults.rows;
-  }
 
   /** Find all jobs constricted to the possible filters:
    *   . title        any company with name similar to 'name'
@@ -86,7 +49,7 @@ class Job {
    *     }
    * 
    * If no filter variables are provided, then returns all jobs in the database
-   * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
+   * Returns [{ id, title, salary, equity, companyHandle }, ...]
    * */
   static async findAll(data={}) {
     const queryVerbs = { name: ' ILIKE ', minSalary: ' >= ', maxSalary: ' <= ' };
@@ -153,12 +116,13 @@ class Job {
 * Throws NotFoundError if not found.
 */
   static async update(id, data) {
+    if( Object.keys(data).length === 0) throw new BadRequestError();  
     const { setCols, values } = sqlForPartialUpdate(data, {});
-    const handleVarIdx = "$" + (values.length + 1);
+    const idVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE jobs 
                       SET ${setCols} 
-                      WHERE handle = ${handleVarIdx} 
+                      WHERE id = ${idVarIdx} 
                       RETURNING id, 
                                 title, 
                                 salary, 
@@ -189,3 +153,5 @@ class Job {
     if (!job) throw new NotFoundError(`No job with id: ${id}`);
   }  
 }
+
+module.exports = Job;
