@@ -22,7 +22,7 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: Admin
  */
 router.post("/", [ensureLoggedIn, verifyIsAdmin], async function (req, res, next) {
   try {
