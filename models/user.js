@@ -3,6 +3,7 @@
 const db = require("../db");
 const bcrypt = require("bcrypt");
 const { sqlForPartialUpdate } = require("../helpers/sql");
+
 const {
   NotFoundError,
   BadRequestError,
@@ -20,7 +21,6 @@ class User {
    *
    * Throws UnauthorizedError is user not found or wrong password.
    **/
-
   static async authenticate(username, password) {
     // try to find the user first
     const result = await db.query(
@@ -55,7 +55,6 @@ class User {
    *
    * Throws BadRequestError on duplicates.
    **/
-
   static async register(
       { username, password, firstName, lastName, email, isAdmin }) {
     const duplicateCheck = await db.query(
@@ -100,7 +99,6 @@ class User {
    *
    * Returns [{ username, first_name, last_name, email, is_admin }, ...]
    **/
-
   static async findAll() {
     const result = await db.query(
           `SELECT username,
@@ -122,7 +120,6 @@ class User {
    *
    * Throws NotFoundError if user not found.
    **/
-
   static async get(username) {
     const userRes = await db.query(
           `SELECT username,
@@ -158,7 +155,6 @@ class User {
    * Callers of this function must be certain they have validated inputs to this
    * or a serious security risks are opened.
    */
-
   static async update(username, data) {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
@@ -191,7 +187,6 @@ class User {
   }
 
   /** Delete given user from database; returns undefined. */
-
   static async remove(username) {
     let result = await db.query(
           `DELETE
@@ -204,6 +199,25 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
+
+  static async applyToJob(username, jobId) {
+    const validJobId = await db.query(
+      `SELECT * FROM jobs
+      WHERE id = $1`,
+      [jobId]
+    );
+    if (validJobId.rows.length === 0) throw new BadRequestError(`No such job: ${jobId}`);
+    
+    let jobResult = await db.query(
+      `INSERT INTO applications
+      ( username, job_id )
+      VALUES ( $1, $2 )
+      RETURNING job_id AS jobId`,
+      [username, jobId]);
+
+    return jobResult.rows[0];
+  }
+
 }
 
 
