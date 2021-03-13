@@ -120,6 +120,13 @@ describe("GET /jobs", () => {
     expect(resp.body).toEqual({
       jobs: [
         {
+          id: expect.any(Number),
+          title: 'Accountant',
+          salary: 89000,
+          equity: '0.25',
+          companyHandle: 'c3'
+        },
+        {
           id: job1.id,
           title: "Data Scientist",
           salary: 115000,
@@ -139,6 +146,13 @@ describe("GET /jobs", () => {
           salary: 125000,
           equity: '0.312',
           companyHandle: "c3",
+        },
+        {
+          id: expect.any(Number),
+          title: 'Manager',
+          salary: 103000,
+          equity: '0.125',
+          companyHandle: 'c3'
         }
       ]
     });
@@ -191,6 +205,13 @@ describe("GET /jobs", () => {
     expect(resp.body).toEqual({
       jobs: [
         {
+          id: expect.any(Number),
+          title: 'Accountant',
+          salary: 89000,
+          equity: '0.25',
+          companyHandle: 'c3'
+        },
+        {
           id:   job1.id,  
           title: job1.title,
           salary: job1.salary,
@@ -203,6 +224,13 @@ describe("GET /jobs", () => {
           salary: job2.salary,
           equity: job2.equity,
           companyHandle: job2.companyHandle
+        },
+        {
+          id: expect.any(Number),
+          title: 'Manager',
+          salary: 103000,
+          equity: '0.125',
+          companyHandle: 'c3'
         }
       ]
     });
