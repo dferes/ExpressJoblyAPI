@@ -39,7 +39,22 @@ async function commonBeforeAll() {
       logoUrl: "http://c3.img",
     }
   );
-
+  await Job.create(
+    {
+      title: 'Manager',
+      salary: 103000,
+      equity: 0.125,
+      companyHandle: 'c3'
+    }
+  );
+  await Job.create(
+    {
+      title: 'Accountant',
+      salary: 89000,
+      equity: 0.25,
+      companyHandle: 'c3'
+    }
+  );
 
   await User.register({
     username: "u1",
