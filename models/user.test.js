@@ -13,6 +13,7 @@ const {
   commonAfterEach,
   commonAfterAll,
 } = require("./_testCommon");
+const Job = require('./job.js');
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -227,4 +228,42 @@ describe("remove", function () {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
   });
+});
+
+/************************************** applyToJob */
+
+describe("applyToJob()", () => {
+  let testUser, testJob;
+  beforeEach( async () => {
+    const testUserData = {
+      username: "Bob23",
+      firstName: "Bob",
+      password: 'password',
+      lastName: "McTester",
+      email: "test@test.com",
+      isAdmin: true,
+    };
+    testUser = await User.register(testUserData);
+    testJob = await  Job.create( {
+      title:         'Data Scientist',
+      salary:        125500, 
+      equity:        0.375,
+      companyHandle: 'c1'
+    });
+  })
+  test(`can create a new job application when an existing username and job id are
+    passed as parameters`, async () => {
+    const res = await User.applyToJob(testUser.username, testJob.id);
+    expect(res).toEqual({ jobid: testJob.id });
+  });
+  test(`fails to create a new job application when an existing username and invalid 
+    job id are passed as parameters`, async () => {
+    try {
+      const res = await User.applyToJob(testUser.username, 0);
+    }catch(err) {
+    expect(err.message).toEqual('No such job: 0');
+    expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+  // one more test here...
 });
