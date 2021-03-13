@@ -285,3 +285,169 @@ describe("GET /jobs", () => {
     expect(resp.statusCode).toEqual(500);
   });
 });
+
+/************************************** GET /:id */
+
+describe("GET /jobs/:id", () => {
+  let job1;
+  beforeEach( async () => {
+    job1 = await Job.create(
+      {
+        title: 'Data Scientist',
+        salary: 115000,
+        equity: 0.25,
+        companyHandle: 'c1'
+      }
+    );
+  });  
+  test(`throws an invalid type error when the id parameter is not an integer`, async () => {
+    const resp = await request(app).get(`/jobs/blah`);
+    expect(resp.status).toEqual(400);
+    expect(resp.body.error.message).toEqual('Invalid input for type integer');
+  });
+  
+  test("throws a 404 error when the id parameter is valid but not found", async () => {
+    const resp = await request(app).get(`/jobs/0`);
+      expect(resp.status).toEqual(404);
+  });
+});
+
+/************************************** PATCH /jobs/:id */
+
+describe("PATCH /jobs/:id", () => {
+  let job1;
+  beforeEach( async () => {
+    job1 = await Job.create(
+      {
+        title: 'Data Scientist',
+        salary: 115000,
+        equity: 0.25,
+        companyHandle: 'c1'
+      }
+    );
+  });     
+  test(`can update a job when the logged in user had admin privileges and the id passed in 
+    the query is valid`, async () => {
+    const resp = await request(app)
+      .patch(`/jobs/${job1.id}`)
+      .send({
+        title: "Data Scientist 2",
+      })
+      .set("authorization", `Bearer ${adminToken}`);
+ 
+    expect(resp.body).toEqual({
+      job: {
+        id: job1.id,
+        title: 'Data Scientist 2',
+        salary: job1.salary,
+        equity: job1.equity,
+        companyHandle: job1.companyHandle
+      }
+    });
+  });
+  
+  test(`returns a 401 unauthorized error when the user that is logged in does not have admin privileges`, async () => {
+    const resp = await request(app)
+      .patch(`/jobs/${job1.id}`)
+      .send({
+        title: "Data Scientist 2",
+      })
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.status).toEqual(401);
+  });
+  test(`returns a 401 unauthorized error when the user is anonymous`, async () => {
+    const resp = await request(app)
+      .patch(`/jobs/${job1.id}`)
+      .send({
+        title: "Data Scientist 2",
+      })
+
+    expect(resp.status).toEqual(401);
+  });
+  test("returns a 404 error when the id passed in the query is valid but does not exist", async () =>  {
+    const resp = await request(app)
+      .patch(`/jobs/0`)
+      .send({
+        title: "Machine Learning Engineer",
+      })
+      .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.statusCode).toEqual(404);
+  });
+  
+  test("returns a 400 error when an attempt to change the job id is made", async () => {
+    const resp = await request(app)
+      .patch(`/jobs/${job1.id}`)
+      .send({
+       id: job1.id,
+      })
+      .set("authorization", `Bearer ${adminToken}`);
+  
+    expect(resp.statusCode).toEqual(400);
+  });
+  test("returns a 400 error when an attempt to change the job's companyHande is made", async () => {
+    const resp = await request(app)
+      .patch(`/jobs/${job1.id}`)
+      .send({
+       companyHandle: 'BadActor',
+      })
+      .set("authorization", `Bearer ${adminToken}`);
+
+    expect(resp.statusCode).toEqual(400);
+  });
+  test("returns a 400 error when malformed data is sent in the request body", async () => {
+    const resp = await request(app)
+      .patch(`/jobs/${job1.id}`)
+      .send({
+        title: false,
+        })
+        .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.statusCode).toEqual(400);
+  });
+});
+
+/************************************** DELETE /jobs/:id */
+
+describe("DELETE /jobs/:id", () => {
+  let job1;
+  beforeEach( async () => {
+    job1 = await Job.create(
+      {
+        title: 'Data Scientist',
+        salary: 115000,
+        equity: 0.25,
+        companyHandle: 'c1'
+      }
+    );
+  });       
+  test("can delete a job when the logged in user has admin privileges", async () => {
+    const id = job1.id;  
+    const resp = await request(app)
+      .delete(`/jobs/${job1.id}`)
+      .set("authorization", `Bearer ${adminToken}`);
+    
+    expect(resp.body).toEqual({ deleted: String(id) });
+  });
+  test("returns a 401 error when the logged in user is not an admin", async () => {
+    const resp = await request(app)
+      .delete(`/jobs/${job1.ud}`)
+      .set("authorization", `Bearer ${u1Token}`);
+    
+    expect(resp.status).toEqual(401);
+    expect(resp.body.error.message).toEqual("Unauthorized");
+  });
+  
+  test("returns a 401 error when the user is anonymous", async () => {
+    const resp = await request(app)
+      .delete(`/jobs/${job1.id}`);
+    expect(resp.statusCode).toEqual(401);
+  });
+  
+  test(`returns a 404 error when the logged in user has admin privileges and the id is valid 
+    but does not exist`, async () => {
+    const resp = await request(app)
+      .delete(`/jobs/0`)
+      .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.statusCode).toEqual(404);
+  });
+});
