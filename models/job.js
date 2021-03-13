@@ -52,7 +52,7 @@ class Job {
    * Returns [{ id, title, salary, equity, companyHandle }, ...]
    * */
   static async findAll(data={}) {
-    const queryVerbs = { name: ' ILIKE ', minSalary: ' >= ', maxSalary: ' <= ' };
+    const queryVerbs = { title: ' ILIKE ', minSalary: ' >= ', maxSalary: ' <= ' };
     let filterValues = null;
     
     if (data.minSalary > data.maxSalary) {
@@ -75,8 +75,8 @@ class Job {
     }                    
 
     searchQuery += ' ORDER BY title'
-
     const jobResults = await db.query(searchQuery, filterValues);
+
     return jobResults.rows;
   }
 
