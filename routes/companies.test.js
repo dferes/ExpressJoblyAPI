@@ -219,7 +219,7 @@ describe("GET /companies/:handle", function () {
   });
   test("works for anon: company with jobs", async function () {
     const resp = await request(app).get(`/companies/c3`);
-    console.log('++++++++++++>>>>>>>>', resp.body);
+
     expect(resp.body).toEqual({
       handle: "c3",
       name: "C3",
