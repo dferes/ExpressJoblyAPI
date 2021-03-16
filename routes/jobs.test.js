@@ -434,6 +434,7 @@ describe("PATCH /jobs/:id", () => {
   });
 });
 
+
 /************************************** DELETE /jobs/:id */
 
 describe("DELETE /jobs/:id", () => {
