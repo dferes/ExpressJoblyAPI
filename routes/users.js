@@ -10,6 +10,7 @@ const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
+const jobApplicationSchema = require("../schemas/jobApplicationSchema.json");
 const { verify } = require("jsonwebtoken");
 
 const router = express.Router();
@@ -41,6 +42,34 @@ router.post("/", [ensureLoggedIn, verifyIsAdmin], async function (req, res, next
     return next(err);
   }
 });
+
+/** POST /:username/job/:id => { job }
+*
+* Allows a user or admin to apply to a job
+*
+* Returns { applied: job_id }
+* 
+* Authorization required: Admin or owner of user account
+*/
+router.post("/:username/jobs/:id", [ensureLoggedIn, ensureAdminOrOwner], async (req, res, next) => {
+  try {
+    const data = {
+      username: req.params.username,
+      id:       +req.params.id
+    }
+
+    const validator = jsonschema.validate(data, jobApplicationSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
+    const jobApplication = await User.applyToJob(data.username, data.id);
+    return res.status(201).json({ applied: jobApplication.jobid });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 
 
 /** GET / => { users: [ {username, firstName, lastName, email }, ... ] }
