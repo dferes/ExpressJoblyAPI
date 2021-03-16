@@ -109,15 +109,52 @@ describe("register", function () {
 /************************************** findAll */
 
 describe("findAll", function () {
+  let testUser, testJob,  testJob2, testApplication, testApplication2;
+  beforeEach( async () => {
+    const testUserData = {
+      username: "Bob32",
+      firstName: "Bob",
+      password: 'password',
+      lastName: "McTester",
+      email: "test@test.com",
+      isAdmin: true,
+    };
+    testUser = await User.register(testUserData);
+    testJob = await  Job.create( {
+      title:         'Data Scientist',
+      salary:        125500, 
+      equity:        0.375,
+      companyHandle: 'c1'
+    });
+    testJob2 = await  Job.create( {
+      title:         'Manager',
+      salary:        132500, 
+      equity:        0.275,
+      companyHandle: 'c1'
+    });
+    testApplication = await User.applyToJob(testUser.username, testJob.id);
+    testApplication2 = await User.applyToJob(testUser.username, testJob2.id);
+  });
+
   test("works", async function () {
     const users = await User.findAll();
+
     expect(users).toEqual([
+      {
+        username: testUser.username,
+        firstName: testUser.firstName,
+        lastName: testUser.lastName,
+        email: testUser.email,
+        isAdmin: testUser.isAdmin,
+        jobs: [testJob.id, testJob2.id]
+      },
       {
         username: "u1",
         firstName: "U1F",
         lastName: "U1L",
         email: "u1@email.com",
         isAdmin: false,
+        jobs: []
       },
       {
         username: "u2",
@@ -125,7 +162,8 @@ describe("findAll", function () {
         lastName: "U2L",
         email: "u2@email.com",
         isAdmin: false,
-      },
+        jobs: []
+      }
     ]);
   });
 });
@@ -236,7 +274,7 @@ describe("remove", function () {
 /************************************** applyToJob */
 
 describe("applyToJob()", () => {
-  let testUser, testJob;
+  let testUser, testJob, testApplication;
   beforeEach( async () => {
     const testUserData = {
       username: "Bob23",
