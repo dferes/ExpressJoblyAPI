@@ -5,6 +5,7 @@ const request = require("supertest");
 const db = require("../db.js");
 const app = require("../app");
 const User = require("../models/user");
+const Job = require("../models/job");
 
 const {
   commonBeforeAll,
@@ -194,7 +195,8 @@ describe("GET /users/:username", function () {
     const resp = await request(app)
         .get(`/users/u1`)
         .set("authorization", `Bearer ${adminToken}`);
-    expect(resp.body).toEqual({
+
+    expect(resp.body.user).toEqual({
       user: {
         username: "u1",
         firstName: "U1F",
@@ -202,6 +204,7 @@ describe("GET /users/:username", function () {
         email: "user1@user.com",
         isAdmin: false,
       },
+      jobs: []
     });
   });
 
@@ -209,7 +212,7 @@ describe("GET /users/:username", function () {
     const resp = await request(app)
       .get(`/users/u1`)
       .set("authorization", `Bearer ${u1Token}`);
-    expect(resp.body).toEqual({
+    expect(resp.body.user).toEqual({
       user: {
         username: "u1",
         firstName: "U1F",
@@ -217,6 +220,7 @@ describe("GET /users/:username", function () {
         email: "user1@user.com",
         isAdmin: false,
       },
+      jobs: []
     });
   });
   
@@ -240,6 +244,7 @@ describe("GET /users/:username", function () {
     const resp = await request(app)
       .get(`/users/nope`)
       .set("authorization", `Bearer ${adminToken}`);
+
     expect(resp.statusCode).toEqual(404);
   });
 });
@@ -363,6 +368,68 @@ describe("PATCH /users/:username", () => {
     const isSuccessful = await User.authenticate("u1", "new-password");
     expect(isSuccessful).toBeTruthy();
   });
+});
+
+
+/************************************** POST /users/:username/jobs/:id */
+
+describe("POST /jobs/:id", () => {
+  let job1, job2, job3;
+  beforeEach( async () => {
+    job1 = await Job.create(
+      {
+        title: 'Data Scientist',
+        salary: 115000,
+        equity: 0.25,
+        companyHandle: 'c1'
+      }
+    );   
+  })  
+  test(`can create a job application when the logged in user has a username that matches 
+    the user token and the id passed in the query is valid`, async () => {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${job1.id}`)
+      .set("authorization", `Bearer ${u1Token}`);
+   
+    expect(resp.status).toEqual(201);
+    expect(resp.body).toEqual({ applied: job1.id })
+  });
+  test(`can create a job application when the logged in user has admin privileges and the 
+    id passed in the query is valid`, async () => {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${job1.id}`)
+      .set("authorization", `Bearer ${adminToken}`);
+    
+    expect(resp.status).toEqual(201);
+    expect(resp.body).toEqual({ applied: job1.id })
+  });
+  test(`Fails to create a job application when the logged in user has a username that matches 
+    the user token but the id passed in the query not an integer`, async () => {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/blah`)
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.body.error.message[0]).toEqual('instance.id is not of a type(s) integer');
+    expect(resp.status).toEqual(400);
+  });
+  test(`Fails to create a job application when the logged in user has a username that matches 
+    the user token but the id passed in the query is not valid`, async () => {
+    const resp = await request(app)
+    .post(`/users/u1/jobs/0`)
+    .set("authorization", `Bearer ${u1Token}`);
+
+  expect(resp.body.error.message).toEqual('No such job: 0');
+  expect(resp.status).toEqual(404);
+  });
+  test(`returns a 401 unauthorized error when the user that is logged in does not have admin privileges and 
+    is not the owner of the account with the provided username`, async () => {
+    const resp = await request(app)
+      .post(`/users/someUser123/jobs/${job1.id}`)
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.status).toEqual(401);
+  });
+
 });
 
 /************************************** DELETE /users/:username */
