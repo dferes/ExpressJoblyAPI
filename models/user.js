@@ -131,10 +131,18 @@ class User {
            WHERE username = $1`,
         [username],
     );
+    if (!userRes.rows[0]) throw new NotFoundError(`No user: ${username}`);
+    
+    const jobApplications = await db.query(
+      `SELECT job_id FROM applications
+      WHERE username = $1`,
+      [username]
+    );
 
-    const user = userRes.rows[0];
-
-    if (!user) throw new NotFoundError(`No user: ${username}`);
+    const user = { 
+      user: userRes.rows[0],
+      jobs: jobApplications.rows
+    };
 
     return user;
   }
@@ -215,7 +223,7 @@ class User {
       WHERE id = $1`,
       [jobId]
     );
-    if (validJobId.rows.length === 0) throw new BadRequestError(`No such job: ${jobId}`);
+    if (validJobId.rows.length === 0) throw new NotFoundError(`No such job: ${jobId}`);
     
     let jobResult = await db.query(
       `INSERT INTO applications
