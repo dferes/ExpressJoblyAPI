@@ -201,6 +201,15 @@ class User {
   }
 
   static async applyToJob(username, jobId) {
+    const validUsername = await db.query(
+      `SELECT username
+         FROM users
+         WHERE username = $1`,
+      [username],
+    );
+
+    if (!validUsername.rows[0]) throw new NotFoundError(`No user: ${username}`);
+
     const validJobId = await db.query(
       `SELECT * FROM jobs
       WHERE id = $1`,
