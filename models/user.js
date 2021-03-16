@@ -97,7 +97,7 @@ class User {
 
   /** Find all users.
    *
-   * Returns [{ username, first_name, last_name, email, is_admin }, ...]
+   * Returns [{ username, first_name, last_name, email, is_admin, jobs: [ jobId, ...] }, ...]
    **/
   static async findAll() {
     const result = await db.query(
@@ -109,8 +109,26 @@ class User {
            FROM users
            ORDER BY username`,
     );
+    
+    let allUsers = [];
+    
+    for (let userObject of result.rows) {
+      let allJobsForUser = await db.query(`
+        SELECT job_id FROM applications
+        WHERE username = $1`,
+        [userObject.username]);
+      
+      allUsers.push({
+        username: userObject.username,
+        firstName: userObject.firstName,
+        lastName: userObject.lastName,
+        email: userObject.email,
+        isAdmin: userObject.isAdmin,
+        jobs: allJobsForUser.rows.map( job => job.job_id)
+      });  
+    }
 
-    return result.rows;
+    return allUsers;
   }
 
   /** Given a username, return data about user.
@@ -208,6 +226,10 @@ class User {
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
 
+  /** Allows a user to apply to a job
+   * 
+   * Returns { jobId: jobid }
+   */
   static async applyToJob(username, jobId) {
     const validUsername = await db.query(
       `SELECT username
