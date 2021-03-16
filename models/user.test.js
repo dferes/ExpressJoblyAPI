@@ -261,9 +261,20 @@ describe("applyToJob()", () => {
     try {
       const res = await User.applyToJob(testUser.username, 0);
     }catch(err) {
+    expect(err.status).toEqual(400);
     expect(err.message).toEqual('No such job: 0');
     expect(err instanceof BadRequestError).toBeTruthy();
     }
   });
-  // one more test here...
+  test(`fails to create a new job application when a valid job id and invalid username
+    are passed as parameters`, async () => {
+  try {
+    const res = await User.applyToJob('notAUsername', testJob.id);
+  }catch(err) {
+
+  expect(err.message).toEqual('No user: notAUsername');
+  expect(err.status).toEqual(404);
+  expect(err instanceof NotFoundError).toBeTruthy();
+  }
+});
 });
