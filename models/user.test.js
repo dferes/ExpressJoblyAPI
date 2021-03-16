@@ -136,11 +136,14 @@ describe("get", function () {
   test("works", async function () {
     let user = await User.get("u1");
     expect(user).toEqual({
-      username: "u1",
-      firstName: "U1F",
-      lastName: "U1L",
-      email: "u1@email.com",
-      isAdmin: false,
+      user: {
+        username: "u1",
+        firstName: "U1F",
+        lastName: "U1L",
+        email: "u1@email.com",
+        isAdmin: false
+      },
+      jobs: []
     });
   });
 
@@ -261,9 +264,9 @@ describe("applyToJob()", () => {
     try {
       const res = await User.applyToJob(testUser.username, 0);
     }catch(err) {
-    expect(err.status).toEqual(400);
+    expect(err.status).toEqual(404);
     expect(err.message).toEqual('No such job: 0');
-    expect(err instanceof BadRequestError).toBeTruthy();
+    expect(err instanceof NotFoundError).toBeTruthy();
     }
   });
   test(`fails to create a new job application when a valid job id and invalid username
