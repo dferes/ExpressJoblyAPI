@@ -12,7 +12,6 @@ const Job = require("../models/job");
 const jobNewSchema = require("../schemas/jobNew.json");
 const jobSearchFilter = require("../schemas/jobSearchFilter.json");
 const jobUpdateSchema = require("../schemas/jobUpdateSchema.json");
-const jobApplicationSchema = require("../schemas/jobApplicationSchema.json");
 
 const router = new express.Router();
 
